@@ -24,14 +24,7 @@ export interface ClientOptions extends BaseClientOptions {
 const localScopes: Scope[] = ['Dev', 'Exclusive'];
 const mapToColl = <T extends AnyCommand | AnyClientEvent>(k: T): [T['name'], T] => [k.name, k];
 const readyError = (propertyName: string) => new Error(`The ${propertyName} property cannot be accessed until the Client is ready`);
-const registerEvents = <T extends keyof ClientEvents>(client: BaseClient, event: ClientEvent<T>) => {
-	if (event.once) {
-		client.once(event.name, event.execute);
-	}
-	else {
-		client.on(event.name, event.execute);
-	}
-};
+const registerEvents = <T extends keyof ClientEvents>(client: BaseClient, event: ClientEvent<T>) => client[event.once ? 'once' : 'on'](event.name, event.execute);
 
 /**
  * An extension of the discord.js Client with more constructor options, properties, and methods
