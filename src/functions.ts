@@ -51,15 +51,15 @@ const invalidId = (type: string, id: Snowflake) => `The ${type} id "${id}" is in
  *
  * @param client - A ready discord.js Client instance
  * @param channelId - The id of the channel to validate and return
- * @param checkText - Whether to validate only text-based channels; defaults to true
+ * @param textOnly - Whether to validate only text-based channels; defaults to true
  * @returns The Channel instance if the id is valid and the channel is cached
  */
-export function validateChannel(client: BaseClient<true>, channelId: Snowflake, checkText: false): Channel;
-export function validateChannel(client: BaseClient<true>, channelId: Snowflake, checkText?: boolean): TextBasedChannel;
-export function validateChannel(client: BaseClient<true>, channelId: Snowflake, checkText = true) {
+export function validateChannel(client: BaseClient<true>, channelId: Snowflake, textOnly: false): Channel;
+export function validateChannel(client: BaseClient<true>, channelId: Snowflake, textOnly?: boolean): TextBasedChannel;
+export function validateChannel(client: BaseClient<true>, channelId: Snowflake, textOnly = true) {
 	const channel = client.channels.cache.get(channelId);
 	if (channel === undefined) throw new Error(invalidId('channel', channelId));
-	if (checkText && !channel.isTextBased()) throw new Error(`The channel with the id "${channelId}" is not text-based; received type "${channel.type}"`);
+	if (textOnly && !channel.isTextBased()) throw new Error(`The channel with the id "${channelId}" is not text-based; received type "${channel.type}"`);
 	return channel;
 }
 
