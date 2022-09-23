@@ -19,6 +19,10 @@
   ],
   "author": "Squiddleton",
   "license": "MIT",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
   "dependencies": {
     "discord.js": "^14.4.0"
   },
