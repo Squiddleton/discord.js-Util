@@ -19,7 +19,7 @@ export interface BaseCommandData {
 	scope: Scope;
 }
 
-export abstract class BaseCommand {
+abstract class BaseCommand {
 	name: string;
 	permissions: PermissionResolvable | null;
 	scope: Scope;
