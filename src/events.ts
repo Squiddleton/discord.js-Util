@@ -1,7 +1,7 @@
 import { Awaitable, ClientEvents } from 'discord.js';
 
-type ClientEventNames = keyof ClientEvents;
-type Execute<T extends ClientEventNames> = (...args: ClientEvents[T]) => Awaitable<void>;
+export type ClientEventNames = keyof ClientEvents;
+export type Execute<T extends ClientEventNames> = (...args: ClientEvents[T]) => Awaitable<void>;
 
 export interface ClientEventData<T extends ClientEventNames> {
 	/** The name of the ClientEvent */
