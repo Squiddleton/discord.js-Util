@@ -11,11 +11,11 @@ import { ApplicationCommandData, ApplicationCommandType, ApplicationCommandOptio
  */
 export type Scope = 'Dev' | 'Exclusive' | 'Global' | 'Guild';
 
-export type SlashCommandExecute = (interaction: ChatInputCommandInteraction, client: Client<true>) => Awaitable<void>;
+export type SlashCommandExecute = (interaction: ChatInputCommandInteraction, client: Client<true>) => Awaitable<unknown>;
 
 export type ContextMenuExecute<Type extends ContextMenuType> = Type extends ApplicationCommandType.Message
-	? (interaction: MessageContextMenuCommandInteraction, client: Client<true>) => Awaitable<void>
-	: (interaction: UserContextMenuCommandInteraction, client: Client<true>) => Awaitable<void>;
+	? (interaction: MessageContextMenuCommandInteraction, client: Client<true>) => Awaitable<unknown>
+	: (interaction: UserContextMenuCommandInteraction, client: Client<true>) => Awaitable<unknown>;
 
 export interface BaseCommandData {
 	name: string;
