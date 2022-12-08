@@ -1,8 +1,17 @@
-import { Channel, Client as BaseClient, codeBlock, CommandInteraction, Snowflake, TextBasedChannel } from 'discord.js';
+import { Channel, Client, codeBlock, CommandInteraction, Snowflake, TextBasedChannel } from 'discord.js';
 import { inspect } from 'util';
+
+const trimCodeBlock = (content: string, language: string) => {
+	const maxLength = 1992 - content.length - language.length; // 2000 (max sendable length) - 8 (universal code block characters length) - length of content - length of language
+	return codeBlock(language, content.slice(0, maxLength));
+};
 
 /**
  * Evaluates code from a command, and replies with the returned value
+ *
+ * @remarks
+ *
+ * The interaction is deferred in this function, so it should not be acknowledged before or after calling this function.
  *
  * @param interaction - The interaction which initiated the command
  * @param code - The code to evaluate
@@ -11,7 +20,6 @@ import { inspect } from 'util';
  */
 export const evalCommand = async (interaction: CommandInteraction, code: string, allowAsync: boolean) => {
 	const { client } = interaction;
-	if (!client.isReady()) return null;
 	if (interaction.user.id !== client.application.owner?.id) {
 		await interaction.reply({ content: 'Only this application\'s owner may use this command.', ephemeral: true });
 		return null;
@@ -32,14 +40,18 @@ export const evalCommand = async (interaction: CommandInteraction, code: string,
 				break;
 			}
 			default: {
-				const isJSON = evaled !== null && typeof evaled === 'object' && evaled.constructor.name === 'Object';
-				await interaction.editReply(codeBlock(isJSON ? 'json' : 'js', (isJSON ? JSON.stringify(evaled, null, 2) : inspect(evaled)).slice(0, 1987)));
+				if (evaled !== null && typeof evaled === 'object' && evaled.constructor.name === 'Object') {
+					await interaction.editReply(trimCodeBlock(JSON.stringify(evaled, null, 2), 'json'));
+				}
+				else {
+					await interaction.editReply(trimCodeBlock(inspect(evaled), 'js'));
+				}
 			}
 		}
 		return evaled;
 	}
 	catch (error) {
-		await interaction.editReply(`\`ERROR\` ${codeBlock('xl', inspect(error))}`);
+		await interaction.editReply(trimCodeBlock(inspect(error), 'xl'));
 		return error;
 	}
 };
@@ -54,9 +66,9 @@ const invalidId = (type: string, id: Snowflake) => `The ${type} id "${id}" is in
  * @param textOnly - Whether to validate only text-based channels; defaults to true
  * @returns The Channel instance if the id is valid and the channel is cached
  */
-export function validateChannel(client: BaseClient<true>, channelId: Snowflake, textOnly: false): Channel;
-export function validateChannel(client: BaseClient<true>, channelId: Snowflake, textOnly?: boolean): TextBasedChannel;
-export function validateChannel(client: BaseClient<true>, channelId: Snowflake, textOnly = true) {
+export function validateChannel(client: Client<true>, channelId: Snowflake, textOnly: false): Channel;
+export function validateChannel(client: Client<true>, channelId: Snowflake, textOnly?: boolean): TextBasedChannel;
+export function validateChannel(client: Client<true>, channelId: Snowflake, textOnly = true) {
 	const channel = client.channels.cache.get(channelId);
 	if (channel === undefined) throw new Error(invalidId('channel', channelId));
 	if (textOnly && !channel.isTextBased()) throw new Error(`The channel with the id "${channelId}" is not text-based; received type "${channel.type}"`);
@@ -70,7 +82,7 @@ export function validateChannel(client: BaseClient<true>, channelId: Snowflake, 
  * @param guildId - The id of the guild to validate and return
  * @returns The Guild instance if the id is valid and the guild is cached
  */
-export const validateGuild = (client: BaseClient<true>, guildId: Snowflake) => {
+export const validateGuild = (client: Client<true>, guildId: Snowflake) => {
 	const guild = client.guilds.cache.get(guildId);
 	if (guild === undefined) throw new Error(invalidId('guild', guildId));
 	return guild;
