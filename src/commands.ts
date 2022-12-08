@@ -11,6 +11,12 @@ import { ApplicationCommandData, ApplicationCommandType, ApplicationCommandOptio
  */
 export type Scope = 'Dev' | 'Exclusive' | 'Global' | 'Guild';
 
+export type SlashCommandExecute = (interaction: ChatInputCommandInteraction, client: Client<true>) => Awaitable<void>;
+
+export type ContextMenuExecute<Type extends ContextMenuType> = Type extends ApplicationCommandType.Message
+	? (interaction: MessageContextMenuCommandInteraction, client: Client<true>) => Awaitable<void>
+	: (interaction: UserContextMenuCommandInteraction, client: Client<true>) => Awaitable<void>;
+
 export interface BaseCommandData {
 	name: string;
 	/** Default member permissions required to access the command in guilds */
@@ -33,13 +39,13 @@ abstract class BaseCommand {
 export interface SlashCommandData extends BaseCommandData {
 	description: string;
 	options?: ApplicationCommandOptionData[];
-	execute: (interaction: ChatInputCommandInteraction, client: Client<true>) => Awaitable<void>;
+	execute: SlashCommandExecute;
 }
 
 export class SlashCommand extends BaseCommand {
 	description: string;
 	options: ApplicationCommandOptionData[] = [];
-	execute: (interaction: ChatInputCommandInteraction, client: Client<true>) => Awaitable<void>;
+	execute: SlashCommandExecute;
 	constructor(data: SlashCommandData) {
 		super(data);
 		this.description = data.description;
@@ -62,16 +68,12 @@ export type ContextMenuType = Exclude<ApplicationCommandType, ApplicationCommand
 
 export interface ContextMenuData<Type extends ContextMenuType> extends BaseCommandData {
 	type: Type;
-	execute: Type extends ApplicationCommandType.Message
-		? (interaction: MessageContextMenuCommandInteraction, client: Client<true>) => Awaitable<void>
-		: (interaction: UserContextMenuCommandInteraction, client: Client<true>) => Awaitable<void>;
+	execute: ContextMenuExecute<Type>;
 }
 
 export class ContextMenu<Type extends ContextMenuType> extends BaseCommand {
 	type: Type;
-	execute: Type extends ApplicationCommandType.Message
-		? (interaction: MessageContextMenuCommandInteraction, client: Client<true>) => Awaitable<void>
-		: (interaction: UserContextMenuCommandInteraction, client: Client<true>) => Awaitable<void>;
+	execute: ContextMenuExecute<Type>;
 	constructor(data: ContextMenuData<Type>) {
 		super(data);
 		this.type = data.type;
