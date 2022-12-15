@@ -2,7 +2,7 @@ import { Channel, Client, codeBlock, CommandInteraction, Snowflake, TextBasedCha
 import { inspect } from 'util';
 
 const trimCodeBlock = (content: string, language: string) => {
-	const maxLength = 1992 - content.length - language.length; // 2000 (max sendable length) - 8 (universal code block characters length) - length of content - length of language
+	const maxLength = 1992 - language.length; // = 2000 (max sendable length) - 8 (universal code block characters length) - length of language
 	return codeBlock(language, content.slice(0, maxLength));
 };
 
