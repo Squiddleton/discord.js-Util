@@ -62,7 +62,7 @@ const client = new Client({ intents: [GatewayIntentBits.Guilds], commands: [ping
 
 client.on('ready', async () => {
     if (client.isReady()) {
-        await client.deploy(); // Deploys all commands from the ClientOptions "commands" array (should only be called when comman structures are updated)
+        await client.deploy(); // Deploys all commands from the ClientOptions "commands" array (should only be called when command structures are updated)
     }
 });
 
