@@ -1,4 +1,4 @@
-import { Channel, Client, codeBlock, CommandInteraction, Snowflake, TextBasedChannel } from 'discord.js';
+import { Channel, Client, codeBlock, CommandInteraction, Snowflake, TextBasedChannel, User } from 'discord.js';
 import { inspect } from 'util';
 
 const trimCodeBlock = (content: string, language: string) => {
@@ -20,7 +20,9 @@ const trimCodeBlock = (content: string, language: string) => {
  */
 export const evalCommand = async (interaction: CommandInteraction, code: string, allowAsync: boolean) => {
 	const { client } = interaction;
-	if (interaction.user.id !== client.application.owner?.id) {
+	const userId = interaction.user.id;
+	const { owner } = await client.application.fetch();
+	if (owner !== null && (owner instanceof User ? owner.id !== userId : !owner.members.has(userId))) {
 		await interaction.reply({ content: 'Only this application\'s owner may use this command.', ephemeral: true });
 		return null;
 	}
