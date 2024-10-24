@@ -51,26 +51,26 @@ export class Client<Ready extends boolean = boolean> extends BaseClient<Ready> {
 	/**
 	 * Deploys application commands based on their scope
 	 */
-	async deploy() {
+	async deploy(allowUserInstall?: boolean) {
 		if (!this.isReady()) throw new Error('Commands cannot be deployed until the Client is ready');
 		const application = await this.application.fetch();
 
 		await application.commands.set(this.commands
 			.filter(c => !localScopes.includes(c.scope))
-			.map(c => c.toJSON())
+			.map(c => c.toJSON(allowUserInstall))
 		);
 
 		if (this.devGuild !== null) {
 			await this.devGuild.commands.set(this.commands
 				.filter(c => localScopes.includes(c.scope))
-				.map(c => c.toJSON())
+				.map(c => c.toJSON(allowUserInstall))
 			);
 		}
 
 		if (this.exclusiveGuild !== null) {
 			await this.exclusiveGuild.commands.set(this.commands
 				.filter(c => c.scope === 'Exclusive')
-				.map(c => c.toJSON())
+				.map(c => c.toJSON(allowUserInstall))
 			);
 		}
 	}

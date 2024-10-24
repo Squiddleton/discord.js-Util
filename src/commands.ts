@@ -1,4 +1,4 @@
-import { ApplicationCommandData, ApplicationCommandType, ApplicationCommandOptionData, Awaitable, Client, ChatInputCommandInteraction, MessageContextMenuCommandInteraction, PermissionResolvable, UserContextMenuCommandInteraction } from 'discord.js';
+import { ApplicationCommandData, ApplicationCommandType, ApplicationCommandOptionData, Awaitable, Client, ChatInputCommandInteraction, PermissionResolvable, ContextMenuCommandInteraction, InteractionContextType, ApplicationIntegrationType, Interaction } from 'discord.js';
 
 /**
  * Dev: Deploys only to Client#devGuild
@@ -13,9 +13,7 @@ export type Scope = 'Dev' | 'Exclusive' | 'Global' | 'Guild';
 
 export type SlashCommandExecute = (interaction: ChatInputCommandInteraction, client: Client<true>) => Awaitable<unknown>;
 
-export type ContextMenuExecute<Type extends ContextMenuType> = Type extends ApplicationCommandType.Message
-	? (interaction: MessageContextMenuCommandInteraction, client: Client<true>) => Awaitable<unknown>
-	: (interaction: UserContextMenuCommandInteraction, client: Client<true>) => Awaitable<unknown>;
+export type ContextMenuExecute<Type extends ContextMenuType> = (interaction: Extract<Interaction, { commandType: Type }>, client: Client<true>) => Awaitable<unknown>;
 
 export interface BaseCommandData {
 	name: string;
@@ -33,6 +31,18 @@ abstract class BaseCommand {
 		this.name = data.name;
 		this.permissions = data.permissions ?? null;
 		this.scope = data.scope;
+	}
+	toJSON(allowUserInstall: boolean): Pick<ApplicationCommandData, 'name' | 'defaultMemberPermissions' | 'contexts' | 'integrationTypes'> {
+		return {
+			name: this.name,
+			defaultMemberPermissions: this.permissions,
+			contexts: this.scope === 'Global'
+				? [InteractionContextType.Guild, InteractionContextType.BotDM, InteractionContextType.PrivateChannel]
+				: [InteractionContextType.Guild],
+			integrationTypes: allowUserInstall && ['Global', 'Guild'].includes(this.scope)
+				? [ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall]
+				: [ApplicationIntegrationType.GuildInstall]
+		};
 	}
 }
 
@@ -53,18 +63,16 @@ export class SlashCommand extends BaseCommand {
 		this.execute = data.execute;
 	}
 	/** Maps the command into deployable JSON data */
-	toJSON(): ApplicationCommandData {
+	toJSON(allowUserInstall = true): ApplicationCommandData {
 		return {
-			name: this.name,
+			...super.toJSON(allowUserInstall),
 			description: this.description,
-			options: this.options ?? [],
-			defaultMemberPermissions: this.permissions,
-			dmPermission: this.scope === 'Global'
+			options: this.options ?? []
 		};
 	}
 }
 
-export type ContextMenuType = Exclude<ApplicationCommandType, ApplicationCommandType.ChatInput>;
+export type ContextMenuType = ContextMenuCommandInteraction['commandType'];
 
 export interface ContextMenuData<Type extends ContextMenuType> extends BaseCommandData {
 	type: Type;
@@ -88,12 +96,10 @@ export class ContextMenu<Type extends ContextMenuType> extends BaseCommand {
 		return this.type === ApplicationCommandType.User;
 	}
 	/** Maps the command into deployable JSON data */
-	toJSON(): ApplicationCommandData {
+	toJSON(allowUserInstall = true): ApplicationCommandData {
 		return {
-			name: this.name,
-			type: this.type,
-			defaultMemberPermissions: this.permissions,
-			dmPermission: this.scope === 'Global'
+			...super.toJSON(allowUserInstall),
+			type: this.type
 		};
 	}
 }
