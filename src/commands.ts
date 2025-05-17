@@ -19,6 +19,10 @@ export interface BaseCommandData {
 	name: string;
 	/** Default member permissions required to access the command in guilds */
 	permissions?: PermissionResolvable;
+	/** Installation contexts that the command is available in; defaults to inferring based on the scope */
+	integrationTypes?: ApplicationIntegrationType[];
+	/** Interaction contexts that the command is usable in; defaults to inferring based on the scope */
+	contexts?: InteractionContextType[];
 	/** See summary of Scope union type for more detail */
 	scope: Scope;
 }
@@ -26,22 +30,26 @@ export interface BaseCommandData {
 abstract class BaseCommand {
 	name: string;
 	permissions: PermissionResolvable | null;
+	integrationTypes: ApplicationIntegrationType[] | null;
+	contexts: InteractionContextType[] | null;
 	scope: Scope;
 	constructor(data: BaseCommandData) {
 		this.name = data.name;
 		this.permissions = data.permissions ?? null;
+		this.integrationTypes = data.integrationTypes ?? null;
+		this.contexts = data.contexts ?? null;
 		this.scope = data.scope;
 	}
 	toJSON(allowUserInstall: boolean): Pick<ApplicationCommandData, 'name' | 'defaultMemberPermissions' | 'contexts' | 'integrationTypes'> {
 		return {
 			name: this.name,
 			defaultMemberPermissions: this.permissions,
-			contexts: this.scope === 'Global'
+			contexts: this.contexts ?? (this.scope === 'Global'
 				? [InteractionContextType.Guild, InteractionContextType.BotDM, InteractionContextType.PrivateChannel]
-				: [InteractionContextType.Guild],
-			integrationTypes: allowUserInstall && ['Global', 'Guild'].includes(this.scope)
+				: [InteractionContextType.Guild]),
+			integrationTypes: this.integrationTypes ?? (allowUserInstall && ['Global', 'Guild'].includes(this.scope)
 				? [ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall]
-				: [ApplicationIntegrationType.GuildInstall]
+				: [ApplicationIntegrationType.GuildInstall])
 		};
 	}
 }
